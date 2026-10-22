@@ -4,6 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>QuipRash</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E %3Crect width='64' height='64' rx='14' fill='%234b2fb8'/%3E %3Crect x='1.5' y='1.5' width='61' height='61' rx='12.5' fill='none' stroke='%230a0820' stroke-width='3'/%3E %3Cg stroke='%230a0820' stroke-width='2.6' stroke-linejoin='round'%3E %3Cpath d='M12 6H30a7 7 0 0 1 7 7V25a7 7 0 0 1-7 7H21L10 40l4-8H12a7 7 0 0 1-7-7V13a7 7 0 0 1 7-7z' fill='%23ffe14d'/%3E %3Cpath d='M37 27H52a7 7 0 0 1 7 7V44a7 7 0 0 1-7 7H51l4 9-13-9H37a7 7 0 0 1-7-7V34a7 7 0 0 1 7-7z' fill='%23ff3d81'/%3E %3C/g%3E %3Cg fill='none' stroke-linecap='round' stroke-linejoin='round' stroke-width='4'%3E %3Cg stroke='%230a0820'%3E%3Cellipse cx='20' cy='16' rx='6' ry='6.5'/%3E%3Cpath d='M23.5 20l3.5 3.5'/%3E%3C/g%3E %3Cpath stroke='%23fff' d='M40.5 32.5v13M40.5 32.5H45.5a4.5 4.5 0 0 1 0 9H40.5M45.5 41.5L51 45.5'/%3E %3C/g%3E %3C/svg%3E">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#12103a">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;800&family=Figtree:wght@400;600;800&display=swap" rel="stylesheet">
@@ -45,15 +49,20 @@ button{font:inherit}
 .who b{background:var(--ink);color:var(--paper);border-radius:8px;padding:2px 8px}
 .who em{color:var(--pink);font-weight:800;font-style:normal}
 .chips{display:flex;gap:10px;flex-wrap:wrap}
-.chip{border:3px solid var(--ink);border-radius:999px;padding:4px 14px;font-weight:800;background:var(--mint)}
+.chip{display:inline-flex;align-items:center;gap:8px;border:3px solid var(--ink);border-radius:999px;padding:3px 14px 3px 4px;font-weight:800;background:var(--mint)}
 .chip.done{background:var(--lemon)}
 .big-code{font-size:clamp(60px,14vw,130px);color:var(--lemon);letter-spacing:.1em;line-height:1}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:0 14px}
 .row{display:flex;align-items:center;gap:12px;margin:8px 0;font-weight:800}
 .row i{display:block;height:26px;background:var(--pink);border:3px solid var(--ink);border-radius:8px;min-width:6px;transition:width .5s}
-.row span:first-child{min-width:110px}
+.row>span:first-child{min-width:140px;display:flex;align-items:center;gap:8px}
 .pick{display:block;width:100%;text-align:left;margin:0 0 14px;font-size:22px}
 .pick.sel{background:var(--lemon)}
+.av{display:inline-flex;align-items:center;justify-content:center;flex:none;vertical-align:middle;border:2px solid var(--ink);border-radius:50%;object-fit:cover;font:800 14px/1 'Bricolage Grotesque',sans-serif;color:var(--ink);background:var(--mut)}
+.bar .av{border-color:var(--paper)}.prompt .av{border-color:var(--lemon);border-width:4px;margin-bottom:10px}
+.pic{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 12px}
+.pic .btn{font-size:15px;padding:8px 12px}
+.pic small{flex-basis:100%;color:#5b5880;font-size:13px}
 @media (max-width:640px){.bar{padding:10px 14px}.clock{font-size:30px}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
@@ -72,8 +81,28 @@ const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt
 const ls = (k, v) => v === undefined ? localStorage.getItem(k) : localStorage.setItem(k, v);
 const DEF = {answerSecs:90, voteSecs:30, rounds:2, perRound:0, mode:'duel', pts:100, bonus:250, autoStart:true, shuffle:true, maxLen:100};
 const SAMPLE = ["The worst name for a pet goldfish","A terrible thing to say at a funeral","What the dentist whispers when you’re asleep","A rejected slogan for a bank","The secret ingredient in Grandma’s soup","Something you should never put in a microwave","A bad title for a self-help book","What the moon is really thinking","The worst superpower","An awkward thing to yell during a wedding toast","A strange thing to find in your pocket","The least helpful instruction on a shampoo bottle"];
-let S = {code:null, role:null, room:null, players:[], answers:[], votes:[], me:null, off:0, draft:{}, o:undefined};
+let S = {pic:null, code:null, role:null, room:null, players:[], answers:[], votes:[], me:null, off:0, draft:{}, o:undefined};
 const now = () => Date.now() + S.off;
+const AVC = ['#ff3d81','#ffe14d','#3de8b5','#b9a4ff'];
+const av = (p, px = 28) => {
+  const st = `width:${px}px;height:${px}px`, n = [...(p.name || '?')];
+  if (/^data:image\/jpeg;base64,[A-Za-z0-9+\/=]+$/.test(p.pic || '')) return `<img class="av" style="${st}" src="${p.pic}" alt="">`;
+  return `<span class="av" style="${st};font-size:${px * .5 | 0}px;background:${AVC[n.reduce((a, c) => a + c.charCodeAt(0), 0) % 4]}">${esc(n[0].toUpperCase())}</span>`;
+};
+// shrink a photo to a tiny square JPEG (about 3-6 KB) so it's cheap to store and sync
+const shrink = (file, px = 96, cap = 7000) => new Promise((ok, bad) => {
+  const url = URL.createObjectURL(file), im = new Image();
+  im.onerror = () => { URL.revokeObjectURL(url); bad(); };
+  im.onload = () => {
+    URL.revokeObjectURL(url);
+    const w = im.naturalWidth, h = im.naturalHeight, s = Math.min(w, h), c = document.createElement('canvas'), x = c.getContext('2d');
+    c.width = c.height = px; x.imageSmoothingQuality = 'high'; x.fillStyle = '#fff'; x.fillRect(0, 0, px, px);
+    x.drawImage(im, (w - s) / 2, (h - s) / 2, s, s, 0, 0, px, px);
+    let q = .8, out; do { out = c.toDataURL('image/jpeg', q); q -= .1; } while (out.length > cap && q > .3);
+    ok(out);
+  };
+  im.src = url;
+});
 const P = id => S.players.find(p => p.id === id) || {name:'?', score:0};
 const upsert = (arr, row) => { const i = arr.findIndex(x => x.id === row.id); i < 0 ? arr.push(row) : arr[i] = row; };
 const shuf = a => { a = [...a]; for (let i = a.length; i > 1;) { const j = Math.random() * i-- | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
@@ -143,12 +172,25 @@ async function create() {
   }
   alert('Couldn’t create a room. Check your Supabase URL, key, and that schema.sql has been run.');
 }
+function picPrev() { return S.pic ? `<img class="av" style="width:64px;height:64px" src="${S.pic}" alt="Your photo">` : `<span class="av" style="width:64px;height:64px;font-size:28px">📷</span>`; }
+async function pickPic(inp) {
+  const f = inp.files[0]; inp.value = ''; if (!f) return;
+  try { S.pic = await shrink(f); } catch { return alert('Couldn’t read that photo. Try a different one.'); }
+  showPic();
+}
+function clearPic() { S.pic = null; showPic(); }
+function showPic() { $('#pv').innerHTML = picPrev(); $('#pclr').hidden = !S.pic; }
 async function join() {
   const code = $('#cd').value.trim().toUpperCase(), name = $('#nm').value.trim();
   if (!code || !name) return alert('Enter a room code and your name.');
   const {data:r} = await sb.from('qp_rooms').select('code').eq('code', code).maybeSingle();
   if (!r) return alert('No room with that code.');
-  const {data, error} = await sb.from('qp_players').insert({room_code:code, name}).select().single();
+  const row = {room_code:code, name}; if (S.pic) row.pic = S.pic;
+  let {data, error} = await sb.from('qp_players').insert(row).select().single();
+  if (error && row.pic && /pic/i.test(error.message)) {
+    delete row.pic; ({data, error} = await sb.from('qp_players').insert(row).select().single());
+    if (!error) alert('You’re in, but without your photo: the game database isn’t set up for photos yet.');
+  }
   if (error) return alert('Couldn’t join: ' + error.message);
   ls('qp_me_' + code, data.id); enter(code, 'player', data.id);
 }
@@ -227,7 +269,11 @@ function draw() {
 const home = () => `<main class="wrap"><h1 class="logo">Quip<span>Rash</span></h1>
 <p class="sub">Write the prompts. Run the clock. Behave Rashly.</p>
 <div class="card"><h2>Host a game</h2><button class="btn pink" onclick="create()">Create room</button></div>
-<div class="card"><h2>Join a game</h2><input id="cd" placeholder="Room code" maxlength="4" autocapitalize="characters" value="${esc(location.hash.slice(1))}"><input id="nm" placeholder="Your name" maxlength="16"><button class="btn teal" onclick="join()">Join game</button></div></main>`;
+<div class="card"><h2>Join a game</h2><input id="cd" placeholder="Room code" maxlength="4" autocapitalize="characters" value="${esc(location.hash.slice(1))}"><input id="nm" placeholder="Your name" maxlength="16">
+<div class="pic"><span id="pv">${picPrev()}</span>${matchMedia('(pointer:coarse)').matches ? '<button class="btn" onclick="$(\'#pcam\').click()">Take selfie</button>' : ''}<button class="btn" onclick="$(\'#pfile\').click()">Upload photo</button><button class="btn" id="pclr" onclick="clearPic()" ${S.pic ? '' : 'hidden'}>Remove</button>
+<small>Optional. Your photo is shrunk to a tiny thumbnail before it’s sent.</small>
+<input type="file" id="pcam" accept="image/*" capture="user" hidden onchange="pickPic(this)"><input type="file" id="pfile" accept="image/*" hidden onchange="pickPic(this)"></div>
+<button class="btn teal" onclick="join()">Join game</button></div></main>`;
 
 const timerUI = t => `<div class="timer"><b data-t class="clock"></b>${[
   [t.running ? 'pause' : 'start', t.running ? 'Pause' : (t.rem > 0 && t.rem < t.total ? 'Resume' : 'Start')], ['add', '+15s', 15000], ['add', '−15s', -15000], ['reset', 'Reset'], ['stop', 'Stop']
@@ -247,7 +293,7 @@ function stage() {
   if (ph === 'lobby') return lobby();
   if (ph === 'answering') return `<h1 class="prompt">Phones out. Start writing.</h1><div class="card"><div class="chips">${S.players.map(p => {
     const need = st.matchups.filter(x => x.pids.includes(p.id)).length, got = st.matchups.reduce((k, x, i) => k + (x.pids.includes(p.id) && ans(i, p.id) ? 1 : 0), 0);
-    return `<span class="chip ${got >= need ? 'done' : ''}">${esc(p.name)} ${got}/${need}</span>`; }).join('')}</div></div>`;
+    return `<span class="chip ${got >= need ? 'done' : ''}">${av(p, 28)}${esc(p.name)} ${got}/${need}</span>`; }).join('')}</div></div>`;
   if (ph === 'voting' || ph === 'reveal') return duel(m, ph === 'reveal');
   return board(ph === 'final');
 }
@@ -256,7 +302,7 @@ function lobby() {
   const num = (k, l) => `<label>${l}<input type="number" min="0" id="s_${k}" value="${s[k]}" onchange="saveS()"></label>`;
   const chk = (k, l) => `<label><input type="checkbox" id="s_${k}" ${s[k] ? 'checked' : ''} onchange="saveS()">${l}</label>`;
   return `<p class="sub" style="text-align:center">Join at ${esc(location.origin + location.pathname)}#${S.code}</p><div class="big-code code" style="text-align:center">${S.code}</div>
-<div class="card" style="margin-top:20px"><h2>Players (${S.players.length})</h2><div class="chips">${S.players.map(p => `<span class="chip">${esc(p.name)} <a href="#" onclick="kick('${p.id}');return false" title="Remove" style="color:var(--ink)">×</a></span>`).join('') || 'Waiting for players…'}</div></div>
+<div class="card" style="margin-top:20px"><h2>Players (${S.players.length})</h2><div class="chips">${S.players.map(p => `<span class="chip">${av(p, 28)}${esc(p.name)} <a href="#" onclick="kick('${p.id}');return false" title="Remove" style="color:var(--ink)">×</a></span>`).join('') || 'Waiting for players…'}</div></div>
 <div class="card"><h2>Timers & rules</h2><div class="grid">${num('answerSecs', 'Answer time (sec, 0 = no timer)')}${num('voteSecs', 'Vote time (sec, 0 = no timer)')}${num('rounds', 'Rounds')}${num('perRound', 'Matchups per round (0 = one per player)')}${num('pts', 'Points per vote')}${num('bonus', 'Sweep bonus')}${num('maxLen', 'Max answer length')}
 <label>Mode<select id="s_mode" onchange="saveS()"><option value="duel" ${s.mode === 'duel' ? 'selected' : ''}>Duel: two players per prompt</option><option value="all" ${s.mode === 'all' ? 'selected' : ''}>Free-for-all: everyone answers</option></select></label></div>
 ${chk('autoStart', 'Start the timer automatically each phase')}${chk('shuffle', 'Shuffle prompt order')}</div>
@@ -266,15 +312,15 @@ function votesIn() { const st = S.room.state, m = st.matchups[st.cur]; const nee
 function duel(m, rev) {
   const st = S.room.state, res = m.res;
   return `<h1 class="prompt">${esc(m.prompt)}</h1><div class="duel">${m.pids.map(id => { const a = ans(st.cur, id);
-    return `<div class="card ans ${rev && res.ql === id ? 'win' : ''}"><p>${a ? esc(a.text) : '<i>no answer</i>'}</p>${rev ? `<div class="who">${esc(P(id).name)} <b>${res.votes[id]} votes, +${res.pts[id]}</b>${res.ql === id ? '<em>Sweep!</em>' : ''}</div>` : ''}</div>`; }).join('')}</div>${rev ? '' : `<p class="sub" style="text-align:center">${votesIn()} votes in</p>`}`;
+    return `<div class="card ans ${rev && res.ql === id ? 'win' : ''}"><p>${a ? esc(a.text) : '<i>no answer</i>'}</p>${rev ? `<div class="who">${av(P(id), 36)}${esc(P(id).name)} <b>${res.votes[id]} votes, +${res.pts[id]}</b>${res.ql === id ? '<em>Sweep!</em>' : ''}</div>` : ''}</div>`; }).join('')}</div>${rev ? '' : `<p class="sub" style="text-align:center">${votesIn()} votes in</p>`}`;
 }
 function board(final) {
   const ps = [...S.players].sort((a, b) => b.score - a.score), mx = Math.max(1, ps[0]?.score || 1);
-  return `${final ? `<h1 class="prompt">${esc(ps[0]?.name)} wins!</h1>` : ''}<div class="card">${ps.map(p => `<div class="row"><span>${esc(p.name)}</span><i style="width:${Math.max(1, p.score / mx * 60)}%"></i><span>${p.score}</span></div>`).join('')}</div>`;
+  return `${final ? `<h1 class="prompt">${ps[0] ? av(ps[0], 88) + '<br>' : ''}${esc(ps[0]?.name)} wins!</h1>` : ''}<div class="card">${ps.map(p => `<div class="row"><span>${av(p, 36)}${esc(p.name)}</span><i style="width:${Math.max(1, p.score / mx * 60)}%"></i><span>${p.score}</span></div>`).join('')}</div>`;
 }
 function playerView() {
   const st = S.room.state, ph = st.phase, me = P(S.me), t = st.timer, lm = lockMsg(); let b = '';
-  const head = `<header class="bar"><div class="lab">${esc(me.name)}</div><div class="lab" style="text-align:right">${me.score} pts</div>${t && t.on && (ph === 'answering' || ph === 'voting') ? '<b data-t class="clock"></b>' : ''}</header>`;
+  const head = `<header class="bar"><div class="lab" style="display:flex;align-items:center;gap:10px">${av(me, 38)}${esc(me.name)}</div><div class="lab" style="text-align:right">${me.score} pts</div>${t && t.on && (ph === 'answering' || ph === 'voting') ? '<b data-t class="clock"></b>' : ''}</header>`;
   if (ph === 'lobby') b = `<div class="card"><h2>You’re in!</h2><p>Waiting for the host to start the game.</p></div>`;
   if (ph === 'answering') {
     const mine = st.matchups.map((m, i) => [m, i]).filter(([m]) => m.pids.includes(S.me));
