@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>QuipQuarrel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;800&family=Figtree:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#12103a;--ink:#0a0820;--pink:#ff3d81;--lemon:#ffe14d;--mint:#3de8b5;--paper:#fffdf5;--mut:#a9a6d6}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(1200px 600px at 50% -10%,#2b1f7a,var(--bg));color:var(--paper);font:400 18px/1.4 Figtree,system-ui,sans-serif;min-height:100vh}
+h1,h2,.logo,.clock,.code,.prompt{font-family:'Bricolage Grotesque',Figtree,sans-serif;font-weight:800;margin:0}
+.wrap{max-width:520px;margin:0 auto;padding:24px 16px}
+.logo{font-size:clamp(44px,12vw,72px);line-height:.95;transform:rotate(-2deg);margin:24px 0 8px}
+.logo span{color:var(--lemon)}
+.sub{color:var(--mut);margin:.4em 0 1em}
+.card{background:var(--paper);color:var(--ink);border:3px solid var(--ink);box-shadow:6px 6px 0 var(--ink);border-radius:14px;padding:16px;margin:0 0 18px}
+.card h2{font-size:22px;margin-bottom:10px}
+.lock{background:var(--lemon);font-weight:800;text-align:center}
+input,select,textarea{width:100%;font:inherit;padding:10px 12px;margin:0 0 10px;border:3px solid var(--ink);border-radius:10px;background:#fff;color:var(--ink)}
+textarea{min-height:90px;resize:vertical}
+input[type=checkbox]{width:auto;margin-right:8px}
+label{display:block;font-weight:600;font-size:15px}
+button{font:inherit}
+.btn{cursor:pointer;font-weight:800;padding:10px 16px;border:3px solid var(--ink);border-radius:10px;background:var(--paper);color:var(--ink);box-shadow:3px 3px 0 var(--ink)}
+.btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px solid var(--lemon);outline-offset:2px}
+.pink{background:var(--pink);color:#fff}.teal{background:var(--mint)}
+.big{font-size:22px;padding:14px 28px}
+.bar{display:flex;gap:14px;align-items:center;flex-wrap:wrap;padding:14px 22px;background:var(--ink)}
+.bar .lab{font-weight:800;flex:1}
+.code{font-size:34px;letter-spacing:.12em;color:var(--lemon)}
+.clock{font-size:40px;min-width:90px;color:var(--mint)}
+.timer{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.timer .btn{padding:6px 10px;font-size:15px}
+.stage{max-width:1100px;margin:0 auto;padding:26px 18px 90px}
+.prompt{font-size:clamp(28px,5vw,52px);line-height:1.05;margin:10px 0 24px;text-align:center}
+.duel{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:22px}
+.ans p{font:800 clamp(22px,3.4vw,34px)/1.15 'Bricolage Grotesque',sans-serif;margin:0 0 8px;overflow-wrap:anywhere}
+.ans.win{background:var(--lemon)}
+.who{display:flex;gap:10px;flex-wrap:wrap;align-items:center;font-weight:600}
+.who b{background:var(--ink);color:var(--paper);border-radius:8px;padding:2px 8px}
+.who em{color:var(--pink);font-weight:800;font-style:normal}
+.chips{display:flex;gap:10px;flex-wrap:wrap}
+.chip{border:3px solid var(--ink);border-radius:999px;padding:4px 14px;font-weight:800;background:var(--mint)}
+.chip.done{background:var(--lemon)}
+.big-code{font-size:clamp(60px,14vw,130px);color:var(--lemon);letter-spacing:.1em;line-height:1}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:0 14px}
+.row{display:flex;align-items:center;gap:12px;margin:8px 0;font-weight:800}
+.row i{display:block;height:26px;background:var(--pink);border:3px solid var(--ink);border-radius:8px;min-width:6px;transition:width .5s}
+.row span:first-child{min-width:110px}
+.pick{display:block;width:100%;text-align:left;margin:0 0 14px;font-size:22px}
+.pick.sel{background:var(--lemon)}
+@media (max-width:640px){.bar{padding:10px 14px}.clock{font-size:30px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+// ====== CONFIG: same values you used for your other Supabase apps ======
+const SUPABASE_URL = "https://YOUR-PROJECT.supabase.co";
+const SUPABASE_KEY = "YOUR-ANON-KEY";
+// ========================================================================
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const ls = (k, v) => v === undefined ? localStorage.getItem(k) : localStorage.setItem(k, v);
+const DEF = {answerSecs:90, voteSecs:30, rounds:2, perRound:0, mode:'duel', pts:100, bonus:250, autoStart:true, shuffle:true, maxLen:100};
+const SAMPLE = ["The worst name for a pet goldfish","A terrible thing to say at a funeral","What the dentist whispers when you’re asleep","A rejected slogan for a bank","The secret ingredient in Grandma’s soup","Something you should never put in a microwave","A bad title for a self-help book","What the moon is really thinking","The worst superpower","An awkward thing to yell during a wedding toast","A strange thing to find in your pocket","The least helpful instruction on a shampoo bottle"];
+let S = {code:null, role:null, room:null, players:[], answers:[], votes:[], me:null, off:0, draft:{}, o:undefined};
+const now = () => Date.now() + S.off;
+const P = id => S.players.find(p => p.id === id) || {name:'?', score:0};
+const upsert = (arr, row) => { const i = arr.findIndex(x => x.id === row.id); i < 0 ? arr.push(row) : arr[i] = row; };
+const shuf = a => { a = [...a]; for (let i = a.length; i > 1;) { const j = Math.random() * i-- | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
+
+// ---------- timer (times are in server-clock ms so every device agrees) ----------
+const mkT = (secs, auto) => secs > 0 ? {on:1, total:secs*1000, running:!!auto, endsAt:now()+secs*1000, rem:secs*1000} : {on:0};
+const rem = t => t.running ? Math.max(0, t.endsAt - now()) : t.rem;
+const open = () => { const st = S.room?.state, t = st?.timer; if (!t || !t.on || !['answering','voting'].includes(st.phase)) return true; return t.running && rem(t) > 0; };
+const fmt = ms => { const s = Math.ceil(ms/1000); return Math.floor(s/60) + ':' + String(s%60).padStart(2,'0'); };
+function lockMsg() {
+  if (open()) return '';
+  const t = S.room.state.timer, r = rem(t);
+  return r <= 0 ? 'Time’s up!' : t.running ? '' : r < t.total ? 'Paused by the host' : 'Waiting for the host to start the timer';
+}
+function T(act, ms) {
+  const t = {...S.room.state.timer}; if (!t.on) return; const r = rem(t);
+  if (act === 'start') { t.rem = r > 0 ? r : t.total; t.endsAt = now() + t.rem; t.running = true; }
+  if (act === 'pause') { t.rem = r; t.running = false; }
+  if (act === 'reset') { t.rem = t.total; t.running = false; }
+  if (act === 'stop') { t.rem = 0; t.running = false; }
+  if (act === 'add') { t.running ? t.endsAt += ms : t.rem = Math.max(0, t.rem + ms); }
+  setState({timer:t});
+}
+function tick() {
+  const t = S.room?.state.timer;
+  document.querySelectorAll('[data-t]').forEach(e => e.textContent = t && t.on ? fmt(rem(t)) : '');
+  const o = open(); if (o !== S.o) { S.o = o; render(); }
+}
+
+// ---------- data ----------
+async function sync() { const t0 = Date.now(); const {data} = await sb.rpc('qp_server_time'); if (data) S.off = Number(data) - (t0 + Date.now()) / 2; }
+async function load() {
+  const c = S.code;
+  const [r, p, a, v] = await Promise.all([
+    sb.from('qp_rooms').select('*').eq('code', c).maybeSingle(),
+    sb.from('qp_players').select('*').eq('room_code', c).order('joined_at'),
+    sb.from('qp_answers').select('*').eq('room_code', c),
+    sb.from('qp_votes').select('*').eq('room_code', c)]);
+  if (r.error) return;
+  if (!r.data) return leave();
+  S.room = r.data; S.players = p.data || []; S.answers = a.data || []; S.votes = v.data || [];
+  render();
+}
+function subscribe() {
+  const c = S.code, f = t => ({event:'*', schema:'public', table:t, filter:(t === 'qp_rooms' ? 'code' : 'room_code') + '=eq.' + c});
+  const h = key => p => { if (p.eventType === 'DELETE') S[key] = S[key].filter(x => x.id !== p.old.id); else upsert(S[key], p.new); render(); };
+  sb.channel('qq' + c)
+    .on('postgres_changes', f('qp_rooms'), p => { if (p.eventType === 'DELETE') leave(); else { S.room = p.new; render(); } })
+    .on('postgres_changes', f('qp_players'), h('players'))
+    .on('postgres_changes', f('qp_answers'), h('answers'))
+    .on('postgres_changes', f('qp_votes'), h('votes'))
+    .subscribe();
+}
+async function enter(code, role, me) {
+  S.code = code; S.role = role; S.me = me; history.replaceState(0, '', '#' + code);
+  await sync(); await load(); subscribe();
+  setInterval(tick, 250); setInterval(load, 8000); setInterval(sync, 60000);
+}
+function leave() { history.replaceState(0, '', location.pathname); location.reload(); }
+
+// ---------- start / join ----------
+async function create() {
+  for (let i = 0; i < 6; i++) {
+    const code = [...Array(4)].map(() => 'ABCDEFGHJKMNPQRSTVWXYZ'[Math.random() * 22 | 0]).join('');
+    const {error} = await sb.from('qp_rooms').insert({code, prompts:SAMPLE, settings:DEF, state:{phase:'lobby', timer:{on:0}}});
+    if (!error) { ls('qp_host', code); return enter(code, 'host'); }
+  }
+  alert('Couldn’t create a room. Check your Supabase URL, key, and that schema.sql has been run.');
+}
+async function join() {
+  const code = $('#cd').value.trim().toUpperCase(), name = $('#nm').value.trim();
+  if (!code || !name) return alert('Enter a room code and your name.');
+  const {data:r} = await sb.from('qp_rooms').select('code').eq('code', code).maybeSingle();
+  if (!r) return alert('No room with that code.');
+  const {data, error} = await sb.from('qp_players').insert({room_code:code, name}).select().single();
+  if (error) return alert('Couldn’t join: ' + error.message);
+  ls('qp_me_' + code, data.id); enter(code, 'player', data.id);
+}
+
+// ---------- host actions ----------
+async function setRoom(patch) { Object.assign(S.room, patch); render(); await sb.from('qp_rooms').update(patch).eq('code', S.code); }
+const setState = p => setRoom({state:{...S.room.state, ...p}});
+function saveS() {
+  const g = k => Math.max(0, +$('#s_' + k).value || 0);
+  setRoom({settings:{...S.room.settings, answerSecs:g('answerSecs'), voteSecs:g('voteSecs'), rounds:Math.max(1, g('rounds')), perRound:g('perRound'), pts:g('pts'), bonus:g('bonus'), maxLen:Math.max(10, g('maxLen')), mode:$('#s_mode').value, autoStart:$('#s_autoStart').checked, shuffle:$('#s_shuffle').checked}});
+}
+function saveP() { const v = S.draft.pr; if (v == null) return; delete S.draft.pr; setRoom({prompts:v.split('\n').map(x => x.trim()).filter(Boolean)}); }
+async function kick(id) { await sb.from('qp_players').delete().eq('id', id); }
+function buildRound(queue) {
+  const s = S.room.settings, ps = shuf(S.players.map(p => p.id)), n = ps.length, c = s.perRound || n; let q = [...queue]; const ms = [];
+  for (let i = 0; i < c; i++) { if (!q.length) q = shuf(S.room.prompts); ms.push({prompt:q.shift(), pids:s.mode === 'all' ? ps : [ps[i % n], ps[(i + 1) % n]]}); }
+  return {ms, q};
+}
+function startRound(round, queue) {
+  const {ms, q} = buildRound(queue), s = S.room.settings;
+  return setState({phase:'answering', round, matchups:ms, queue:q, cur:0, timer:mkT(s.answerSecs, s.autoStart)});
+}
+async function start() {
+  if (S.players.length < 3) return alert('You need at least 3 players.');
+  if (!S.room.prompts.length) return alert('Add at least one prompt.');
+  await sb.from('qp_answers').delete().eq('room_code', S.code); await sb.from('qp_votes').delete().eq('room_code', S.code);
+  await sb.from('qp_players').update({score:0}).eq('room_code', S.code);
+  S.players.forEach(p => p.score = 0);
+  startRound(1, S.room.settings.shuffle ? shuf(S.room.prompts) : S.room.prompts);
+}
+function nextVote(idx) { const st = S.room.state, s = S.room.settings; return idx < st.matchups.length ? setState({phase:'voting', cur:idx, timer:mkT(s.voteSecs, s.autoStart)}) : setState({phase:'scores', timer:{on:0}}); }
+async function reveal() {
+  const st = S.room.state, s = S.room.settings, m = st.matchups[st.cur], vs = S.votes.filter(v => v.round === st.round && v.mi === st.cur), votes = {}, pts = {};
+  m.pids.forEach(id => votes[id] = vs.filter(v => v.for_player === id).length);
+  const tot = Object.values(votes).reduce((a, b) => a + b, 0); let ql = null;
+  m.pids.forEach(id => { pts[id] = votes[id] * s.pts; if (m.pids.length === 2 && tot >= 2 && votes[id] === tot) { pts[id] += s.bonus; ql = id; } });
+  await Promise.all(m.pids.filter(id => pts[id]).map(id => sb.from('qp_players').update({score:P(id).score + pts[id]}).eq('id', id)));
+  setState({phase:'reveal', matchups:st.matchups.map((x, i) => i === st.cur ? {...x, res:{votes, pts, ql}} : x), timer:{on:0}});
+}
+function next() {
+  const st = S.room.state, s = S.room.settings;
+  switch (st.phase) {
+    case 'lobby': return start();
+    case 'answering': return nextVote(0);
+    case 'voting': return reveal();
+    case 'reveal': return nextVote(st.cur + 1);
+    case 'scores': return st.round < s.rounds ? startRound(st.round + 1, st.queue) : setState({phase:'final'});
+    case 'final': return setState({phase:'lobby', timer:{on:0}});
+  }
+}
+const skip = () => nextVote(S.room.state.cur + 1);
+async function endRoom() { if (confirm('Delete this room for everyone?')) { await sb.from('qp_rooms').delete().eq('code', S.code); leave(); } }
+
+// ---------- player actions ----------
+const ans = (mi, pid) => S.answers.find(a => a.round === S.room.state.round && a.mi === mi && a.player_id === pid);
+async function submit(mi) {
+  const text = document.getElementById('a' + mi).value.trim(); if (!text || !open()) return;
+  delete S.draft['a' + mi];
+  const {data} = await sb.from('qp_answers').upsert({room_code:S.code, round:S.room.state.round, mi, player_id:S.me, text}, {onConflict:'room_code,round,mi,player_id'}).select().single();
+  if (data) { upsert(S.answers, data); render(); }
+}
+async function vote(forId) {
+  if (!open()) return; const st = S.room.state;
+  const {data} = await sb.from('qp_votes').upsert({room_code:S.code, round:st.round, mi:st.cur, voter_id:S.me, for_player:forId}, {onConflict:'room_code,round,mi,voter_id'}).select().single();
+  if (data) { upsert(S.votes, data); render(); }
+}
+
+// ---------- views ----------
+let rq; function render() { cancelAnimationFrame(rq); rq = requestAnimationFrame(draw); }
+function draw() {
+  const a = document.activeElement, id = a && a.id, ss = a && a.selectionStart;
+  $('#app').innerHTML = !S.room ? home() : S.role === 'host' ? hostView() : playerView();
+  if (id) { const e = document.getElementById(id); if (e) { e.focus(); try { e.setSelectionRange(ss, ss); } catch {} } }
+  tick();
+}
+const home = () => `<main class="wrap"><h1 class="logo">Quip<span>Quarrel</span></h1>
+<p class="sub">Write the prompts. Run the clock. Roast your friends.</p>
+<div class="card"><h2>Host a game</h2><button class="btn pink" onclick="create()">Create room</button></div>
+<div class="card"><h2>Join a game</h2><input id="cd" placeholder="Room code" maxlength="4" autocapitalize="characters" value="${esc(location.hash.slice(1))}"><input id="nm" placeholder="Your name" maxlength="16"><button class="btn teal" onclick="join()">Join game</button></div></main>`;
+
+const timerUI = t => `<div class="timer"><b data-t class="clock"></b>${[
+  [t.running ? 'pause' : 'start', t.running ? 'Pause' : (t.rem > 0 && t.rem < t.total ? 'Resume' : 'Start')], ['add', '+15s', 15000], ['add', '−15s', -15000], ['reset', 'Reset'], ['stop', 'Stop']
+].map(([a, l, ms]) => `<button class="btn" onclick="T('${a}',${ms || 0})">${l}</button>`).join('')}</div>`;
+
+function hostView() {
+  const r = S.room, st = r.state, s = r.settings, t = st.timer, ph = st.phase, n = st.matchups?.length;
+  const timed = t && t.on && (ph === 'answering' || ph === 'voting');
+  const lab = {lobby:'Lobby', answering:`Round ${st.round}: write your answers`, voting:`Round ${st.round}: matchup ${st.cur + 1} of ${n}`, reveal:'Results', scores:`Scores after round ${st.round}`, final:'Final scores'}[ph];
+  const btn = {lobby:'Start game', answering:'Start voting', voting:'Reveal answers', reveal:st.cur + 1 < n ? 'Next matchup' : 'Show scores', scores:st.round < s.rounds ? 'Next round' : 'Final results', final:'Back to lobby'}[ph];
+  return `<header class="bar"><div class="code">${S.code}</div><div class="lab">${lab}</div>${timed ? timerUI(t) : ''}</header>
+<main class="stage">${stage()}</main>
+<footer class="bar" style="position:fixed;bottom:0;left:0;right:0"><button class="btn pink big" onclick="next()">${btn}</button>${ph === 'voting' ? '<button class="btn" onclick="skip()">Skip matchup</button>' : ''}<span style="flex:1"></span><button class="btn" onclick="endRoom()">End room</button></footer>`;
+}
+function stage() {
+  const st = S.room.state, ph = st.phase, m = st.matchups?.[st.cur];
+  if (ph === 'lobby') return lobby();
+  if (ph === 'answering') return `<h1 class="prompt">Phones out. Start writing.</h1><div class="card"><div class="chips">${S.players.map(p => {
+    const need = st.matchups.filter(x => x.pids.includes(p.id)).length, got = st.matchups.reduce((k, x, i) => k + (x.pids.includes(p.id) && ans(i, p.id) ? 1 : 0), 0);
+    return `<span class="chip ${got >= need ? 'done' : ''}">${esc(p.name)} ${got}/${need}</span>`; }).join('')}</div></div>`;
+  if (ph === 'voting' || ph === 'reveal') return duel(m, ph === 'reveal');
+  return board(ph === 'final');
+}
+function lobby() {
+  const s = S.room.settings, d = S.draft;
+  const num = (k, l) => `<label>${l}<input type="number" min="0" id="s_${k}" value="${s[k]}" onchange="saveS()"></label>`;
+  const chk = (k, l) => `<label><input type="checkbox" id="s_${k}" ${s[k] ? 'checked' : ''} onchange="saveS()">${l}</label>`;
+  return `<p class="sub" style="text-align:center">Join at ${esc(location.origin + location.pathname)}#${S.code}</p><div class="big-code code" style="text-align:center">${S.code}</div>
+<div class="card" style="margin-top:20px"><h2>Players (${S.players.length})</h2><div class="chips">${S.players.map(p => `<span class="chip">${esc(p.name)} <a href="#" onclick="kick('${p.id}');return false" title="Remove" style="color:var(--ink)">×</a></span>`).join('') || 'Waiting for players…'}</div></div>
+<div class="card"><h2>Timers & rules</h2><div class="grid">${num('answerSecs', 'Answer time (sec, 0 = no timer)')}${num('voteSecs', 'Vote time (sec, 0 = no timer)')}${num('rounds', 'Rounds')}${num('perRound', 'Matchups per round (0 = one per player)')}${num('pts', 'Points per vote')}${num('bonus', 'Sweep bonus')}${num('maxLen', 'Max answer length')}
+<label>Mode<select id="s_mode" onchange="saveS()"><option value="duel" ${s.mode === 'duel' ? 'selected' : ''}>Duel: two players per prompt</option><option value="all" ${s.mode === 'all' ? 'selected' : ''}>Free-for-all: everyone answers</option></select></label></div>
+${chk('autoStart', 'Start the timer automatically each phase')}${chk('shuffle', 'Shuffle prompt order')}</div>
+<div class="card"><h2>Your prompts (${S.room.prompts.length}), one per line</h2><textarea id="pr" style="min-height:220px" oninput="S.draft.pr=this.value" onblur="saveP()">${esc(d.pr ?? S.room.prompts.join('\n'))}</textarea></div>`;
+}
+function votesIn() { const st = S.room.state, m = st.matchups[st.cur]; const need = S.room.settings.mode === 'all' ? S.players.length : S.players.filter(p => !m.pids.includes(p.id)).length; return `${S.votes.filter(v => v.round === st.round && v.mi === st.cur).length} of ${need}`; }
+function duel(m, rev) {
+  const st = S.room.state, res = m.res;
+  return `<h1 class="prompt">${esc(m.prompt)}</h1><div class="duel">${m.pids.map(id => { const a = ans(st.cur, id);
+    return `<div class="card ans ${rev && res.ql === id ? 'win' : ''}"><p>${a ? esc(a.text) : '<i>no answer</i>'}</p>${rev ? `<div class="who">${esc(P(id).name)} <b>${res.votes[id]} votes, +${res.pts[id]}</b>${res.ql === id ? '<em>Sweep!</em>' : ''}</div>` : ''}</div>`; }).join('')}</div>${rev ? '' : `<p class="sub" style="text-align:center">${votesIn()} votes in</p>`}`;
+}
+function board(final) {
+  const ps = [...S.players].sort((a, b) => b.score - a.score), mx = Math.max(1, ps[0]?.score || 1);
+  return `${final ? `<h1 class="prompt">${esc(ps[0]?.name)} wins!</h1>` : ''}<div class="card">${ps.map(p => `<div class="row"><span>${esc(p.name)}</span><i style="width:${Math.max(1, p.score / mx * 60)}%"></i><span>${p.score}</span></div>`).join('')}</div>`;
+}
+function playerView() {
+  const st = S.room.state, ph = st.phase, me = P(S.me), t = st.timer, lm = lockMsg(); let b = '';
+  const head = `<header class="bar"><div class="lab">${esc(me.name)}</div><div class="lab" style="text-align:right">${me.score} pts</div>${t && t.on && (ph === 'answering' || ph === 'voting') ? '<b data-t class="clock"></b>' : ''}</header>`;
+  if (ph === 'lobby') b = `<div class="card"><h2>You’re in!</h2><p>Waiting for the host to start the game.</p></div>`;
+  if (ph === 'answering') {
+    const mine = st.matchups.map((m, i) => [m, i]).filter(([m]) => m.pids.includes(S.me));
+    b = (lm ? `<div class="card lock">${lm}</div>` : '') + (mine.map(([m, i]) => { const a = ans(i, S.me), id = 'a' + i;
+      return `<div class="card"><h2>${esc(m.prompt)}</h2><textarea id="${id}" maxlength="${S.room.settings.maxLen}" ${lm ? 'disabled' : ''} oninput="S.draft[this.id]=this.value">${esc(S.draft[id] ?? a?.text ?? '')}</textarea><button class="btn teal" ${lm ? 'disabled' : ''} onclick="submit(${i})">${a ? 'Update answer' : 'Submit answer'}</button></div>`; }).join('') || '<div class="card"><h2>No prompts for you this round</h2></div>');
+  }
+  if (ph === 'voting') {
+    const m = st.matchups[st.cur], mine = S.votes.find(v => v.round === st.round && v.mi === st.cur && v.voter_id === S.me);
+    if (S.room.settings.mode !== 'all' && m.pids.includes(S.me)) b = `<div class="card lock">You’re in this one. Sit tight and let them judge.</div>`;
+    else b = `<h2 style="margin:6px 0 14px">${esc(m.prompt)}</h2>` + (lm ? `<div class="card lock">${lm}</div>` : '') + m.pids.filter(id => id !== S.me).map(id => { const a = ans(st.cur, id);
+      return `<button class="btn pick ${mine?.for_player === id ? 'sel' : ''}" ${!a || lm ? 'disabled' : ''} onclick="vote('${id}')">${a ? esc(a.text) : 'no answer'}</button>`; }).join('');
+  }
+  if (ph === 'reveal') b = duel(st.matchups[st.cur], true);
+  if (ph === 'scores' || ph === 'final') b = board(ph === 'final');
+  return head + `<main class="wrap">${b}</main>`;
+}
+
+// ---------- boot ----------
+draw();
+const h = location.hash.slice(1).toUpperCase();
+if (h && ls('qp_host') === h) enter(h, 'host');
+else if (h && ls('qp_me_' + h)) enter(h, 'player', ls('qp_me_' + h));
+</script>
+</body>
+</html>
