@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>QuipQuarrel</title>
+<title>QuipRash</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;800&family=Figtree:wght@400;600;800&display=swap" rel="stylesheet">
@@ -63,8 +63,8 @@ button{font:inherit}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script>
 // ====== CONFIG: same values you used for your other Supabase apps ======
-const SUPABASE_URL = "https://YOUR-PROJECT.supabase.co";
-const SUPABASE_KEY = "YOUR-ANON-KEY";
+const SUPABASE_URL = "https://vikxpnxnbmhmawhnwxzl.supabase.co";
+const SUPABASE_KEY = "sb_publishable_0WwmJLwgxP4uSQF8TDdaOw_vrL-XU6x";
 // ========================================================================
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 const $ = s => document.querySelector(s);
@@ -224,8 +224,8 @@ function draw() {
   if (id) { const e = document.getElementById(id); if (e) { e.focus(); try { e.setSelectionRange(ss, ss); } catch {} } }
   tick();
 }
-const home = () => `<main class="wrap"><h1 class="logo">Quip<span>Quarrel</span></h1>
-<p class="sub">Write the prompts. Run the clock. Roast your friends.</p>
+const home = () => `<main class="wrap"><h1 class="logo">Quip<span>Rash</span></h1>
+<p class="sub">Write the prompts. Run the clock. Behave Rashly.</p>
 <div class="card"><h2>Host a game</h2><button class="btn pink" onclick="create()">Create room</button></div>
 <div class="card"><h2>Join a game</h2><input id="cd" placeholder="Room code" maxlength="4" autocapitalize="characters" value="${esc(location.hash.slice(1))}"><input id="nm" placeholder="Your name" maxlength="16"><button class="btn teal" onclick="join()">Join game</button></div></main>`;
 
