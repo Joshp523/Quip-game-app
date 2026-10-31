@@ -6,7 +6,7 @@ A customizable, comic-book party game in the spirit of Quiplash. Write your own 
 
 1. The host opens the site on a laptop or TV and clicks **Create room**.
 2. Players open the same URL on their phones, enter the 4-letter code and a name, and (optionally) add a photo. No photo means a random face.
-3. In the lobby, players can add their own prompts. The host sees them redacted until they click **Reveal custom prompts**.
+3. Prompts live in a shared library that is saved permanently and reused every game. In the lobby, players can add their own from their phones. The host sees those redacted until they click **Reveal custom prompts**, and can delete any prompt, including the starter ones.
 4. Each round, players write answers to their prompts, then everyone votes on the matchups.
 5. Round 2 is worth ×2 points and round 3 is worth ×3.
 6. Ties for first place trigger a sudden-death round where everybody plays and the winner takes all.
@@ -46,7 +46,6 @@ Click **Game settings** at the bottom of the lobby to change:
 - Points per vote, sweep bonus, and max answer length
 - Duel mode (two players per prompt) or free-for-all (everyone answers)
 - Auto-advance and auto-start timers, and prompt shuffling
-- Your prompt list (one per line)
 - **Background music:** the built-in carnival tune, or your own MP3, M4A, WAV or OGG file (max 25 MB). Your track is stored only in the host's browser and loops automatically. Music starts on the host's first click.
 
 ## Notes
@@ -56,5 +55,5 @@ Click **Game settings** at the bottom of the lobby to change:
   ```sql
   delete from qp_rooms where created_at < now() - interval '7 days';
   ```
-- **Minimum players:** 2.
-- **Troubleshooting:** if "Create room" fails, check the key and URL, and make sure `schema.sql` ran without errors.
+- **Players:** the minimum is 2 and there's no maximum. Matchups per round scale with the number of players (one per player by default).
+- **Troubleshooting:** if "Create room" fails, check the key and URL, and make sure `schema.sql` ran without errors in the same project your keys point to. If photos fail with a "check constraint" or "too long" error, re-run `schema.sql`, which removes old photo size limits. If they fail with a "schema cache" error, run `notify pgrst, 'reload schema';` in the SQL Editor and try again.

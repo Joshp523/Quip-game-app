@@ -579,8 +579,8 @@ function playerView() {
 // ---------- boot ----------
 draw();
 const h = location.hash.slice(1).toUpperCase();
-if (h && ls('qp_host') === h) enter(h, 'host');
 ['pointerdown', 'keydown'].forEach(e => addEventListener(e, () => { if (S.role === 'host') musicStart(); }, true));
+if (h && ls('qp_host') === h) enter(h, 'host');
 else if (h && ls('qp_me_' + h)) enter(h, 'player', ls('qp_me_' + h));
 </script>
 </body>
