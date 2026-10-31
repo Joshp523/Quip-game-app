@@ -14,6 +14,8 @@ A customizable, comic-book party game in the spirit of Quiplash. Write your own 
 
 **Two players?** Head-to-head mode switches on automatically. You both answer every prompt, then rate each other's answers from 1 to 5.
 
+If a player runs out of time, whatever they typed is submitted for them. If they typed nothing, a random "safety quip" (editable in settings) is used instead.
+
 The game runs itself: timers advance each phase, and the host can pause, add 15 seconds, or skip at any point.
 
 ## Setup
@@ -46,6 +48,7 @@ Click **Game settings** at the bottom of the lobby to change:
 - Points per vote, sweep bonus, and max answer length
 - Duel mode (two players per prompt) or free-for-all (everyone answers)
 - Auto-advance and auto-start timers, and prompt shuffling
+- Safety quips (the fallback answers for players who run out of time)
 - **Background music:** the built-in carnival tune, or your own MP3, M4A, WAV or OGG file (max 25 MB). Your track is stored only in the host's browser and loops automatically. Music starts on the host's first click.
 
 ## Notes
