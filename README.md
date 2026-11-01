@@ -10,7 +10,7 @@ A customizable, comic-book party game in the spirit of Quiplash. Write your own 
 4. Each round, players write answers to their prompts, then everyone votes on the matchups.
 5. Round 2 is worth ×2 points and round 3 is worth ×3.
 6. Ties for first place trigger a sudden-death round where everybody plays and the winner takes all.
-7. The game ends with a podium, and the host can play again with the same players.
+7. The game ends with a podium, and the host can play again with the same players. Prompts already used in the room aren't repeated until every prompt has been played.
 
 **Two players?** Head-to-head mode switches on automatically. You both answer every prompt, then rate each other's answers from 1 to 5.
 

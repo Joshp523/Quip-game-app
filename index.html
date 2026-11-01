@@ -388,6 +388,13 @@ function saveS() {
   setRoom({settings:{...S.room.settings, answerSecs:g('answerSecs'), voteSecs:g('voteSecs'), rounds:Math.max(1, g('rounds')), perRound:g('perRound'), pts:g('pts'), bonus:g('bonus'), maxLen:Math.max(10, g('maxLen')), mode:$('#s_mode').value, autoStart:$('#s_autoStart').checked, auto:$('#s_auto').checked, revealSecs:g('revealSecs'), scoreSecs:g('scoreSecs'), shuffle:$('#s_shuffle').checked}});
 }
 async function kick(id) { await sb.from('qp_players').delete().eq('id', id); }
+// Prompts used in this room are remembered across games ("play again"), so fresh ones always come first.
+// Once every prompt has been used, the ones used longest ago come back first.
+const markUsed = ps => { let u = [...(S.room.state.used || [])]; ps.forEach(t => { u = u.filter(x => x !== t); u.push(t); }); return u; };
+function orderedQueue() {
+  const all = poolTexts(), used = S.room.state.used || [], seen = new Set(used), fresh = all.filter(t => !seen.has(t));
+  return [...(S.room.settings.shuffle ? shuf(fresh) : fresh), ...used.filter(t => all.includes(t))];
+}
 function buildRound(queue) {
   const s = S.room.settings, ps = shuf(S.players.map(p => p.id)), n = ps.length, c = s.perRound || (s.mode === 'all' ? 4 : n); let q = [...queue]; const ms = [];
   for (let i = 0; i < c; i++) { if (!q.length) q = shuf(S.pool || poolTexts()); ms.push({prompt:q.shift(), pids:n === 2 || s.mode === 'all' ? ps : [ps[i % n], ps[(i + 1) % n]]}); }
@@ -395,7 +402,7 @@ function buildRound(queue) {
 }
 function startRound(round, queue) {
   const {ms, q} = buildRound(queue), s = S.room.settings;
-  return setState({phase:'answering', round, matchups:ms, queue:q, cur:0, tb:false, champ:null, ...(round === 1 ? {sweeps:[]} : {}), rate:S.players.length === 2, timer:mkT(s.answerSecs, s.autoStart)});
+  return setState({phase:'answering', round, matchups:ms, queue:q, used:markUsed(ms.map(m => m.prompt)), cur:0, tb:false, champ:null, ...(round === 1 ? {sweeps:[]} : {}), rate:S.players.length === 2, timer:mkT(s.answerSecs, s.autoStart)});
 }
 async function start() {
   if (S.players.length < 2) return alert('You need at least 2 players.');
@@ -404,7 +411,7 @@ async function start() {
   await sb.from('qp_players').update({score:0}).eq('room_code', S.code);
   S.players.forEach(p => p.score = 0);
   S.pool = poolTexts();
-  startRound(1, S.room.settings.shuffle ? shuf(S.pool) : S.pool);
+  startRound(1, orderedQueue());
 }
 function nextVote(idx) { const st = S.room.state, s = S.room.settings; return idx < st.matchups.length ? setState({phase:'voting', cur:idx, timer:mkT(s.voteSecs, s.autoStart)}) : setState({phase:'scores', timer:mkT(s.scoreSecs ?? 10, true)}); }
 const mult = () => Math.min(S.room.state.round || 1, 3); // round 1 = x1, round 2 = x2, round 3+ = x3
@@ -428,7 +435,8 @@ async function reveal() {
 const tieFirst = () => { const ps = [...S.players].sort((a, b) => b.score - a.score); return ps.length > 1 && ps[0].score === ps[1].score; };
 function startTB() { // sudden death: everybody plays one prompt, winner takes all
   const st = S.room.state, s = S.room.settings; let q = [...(st.queue || [])]; if (!q.length) q = shuf(S.pool || poolTexts());
-  return setState({phase:'answering', tb:true, round:st.round + 1, matchups:[{prompt:q.shift(), pids:S.players.map(p => p.id)}], queue:q, cur:0, timer:mkT(s.answerSecs, s.autoStart)});
+  const tbPrompt = q.shift();
+  return setState({phase:'answering', tb:true, round:st.round + 1, matchups:[{prompt:tbPrompt, pids:S.players.map(p => p.id)}], queue:q, used:markUsed([tbPrompt]), cur:0, timer:mkT(s.answerSecs, s.autoStart)});
 }
 function afterTB() {
   const v = S.room.state.matchups[0].res.votes, mx = Math.max(...Object.values(v)), w = Object.keys(v).filter(id => v[id] === mx);
