@@ -1,62 +1,36 @@
-# QuipRash
+<p align="center"><img src="android-chrome-192x192.png" width="110" alt=""></p>
 
-A customizable, comic-book party game in the spirit of Quiplash. Write your own prompts, answer on your phones, vote on the funniest, and watch the podium at the end. Runs entirely in the browser on **GitHub Pages** with a free **Supabase** database for realtime sync. No build step.
+<h1 align="center">QuipRash</h1>
+<p align="center"><em>Write the prompts. Run the clock. Behave rashly.</em></p>
+<p align="center"><a href="https://joshp523.github.io/Quip-game-app/"><b>▶ Open the app</b></a></p>
 
-## How it plays
+<p align="center"><img src="readme-showcase.jpg" alt="QuipRash on a phone"></p>
 
-1. The host opens the site on a laptop or TV and clicks **Create room**.
-2. Players open the same URL on their phones, enter the 4-letter code and a name, and (optionally) add a photo. No photo means a random face.
-3. Prompts live in a shared library that is saved permanently and reused every game. In the lobby, players can add their own from their phones. The host sees those redacted until they click **Reveal custom prompts**, and can delete any prompt, including the starter ones.
-4. Each round, players write answers to their prompts, then everyone votes on the matchups.
-5. Round 2 is worth ×2 points and round 3 is worth ×3.
-6. Ties for first place trigger a sudden-death round where everybody plays and the winner takes all.
-7. The game ends with a podium, and the host can play again with the same players. Prompts already used in the room aren't repeated until every prompt has been played.
+QuipRash is a comic-book party game for any group with phones. The host puts the game on a laptop or TV; everyone else joins on their own phone with a four-letter code. Answer silly prompts, vote for the funniest answer, and see who takes the podium.
 
-**Two players?** Head-to-head mode switches on automatically. You both answer every prompt, then rate each other's answers from 1 to 5.
+## How a game goes
 
-If a player runs out of time, whatever they typed is submitted for them. If they typed nothing, a random "safety quip" (editable in settings) is used instead.
+1. **Create a room** on the big screen. Friends type the code on their phones and snap a photo (or get a random face).
+2. **Answer** the prompts on your phone, privately.
+3. **Vote** on head-to-head matchups. Rounds 2 and 3 are worth double and triple.
+4. **Podium**, then play again. Ties go to sudden death.
 
-The game runs itself: timers advance each phase, and the host can pause, add 15 seconds, or skip at any point.
+Just two of you? It switches to head-to-head mode automatically.
 
-## Setup
+<table><tr><td align="center" valign="top"><img src="readme-screen-1.jpg" width="230" alt="Start or join a game"><br><sub>Start or join a game</sub></td></tr></table>
+## Why it's worth a look
 
-1. **Create a Supabase project** (free tier is fine).
-2. In the Supabase **SQL Editor**, run `schema.sql`. It's safe to re-run.
-3. Open `index.html` and set your values near the top of the script:
-   ```js
-   const SUPABASE_URL = "https://YOUR-PROJECT.supabase.co";
-   const SUPABASE_KEY = "YOUR-ANON-OR-PUBLISHABLE-KEY";
-   ```
-4. Push everything to a GitHub repo and enable **Settings → Pages** (deploy from the main branch, root folder).
-5. Open the Pages URL and create a room.
+- **Cool:** It feels like a TV game show, with comic art, timers, music and a podium at the end.
+- **Innovative:** You write the prompts. The family's inside jokes become the game, and the prompt library grows every time you play.
+- **Impressive:** It runs live across everyone's phones at once, with no app store, no accounts and no cost.
+- **Useful:** Instant fun for a holiday table, a long video call, or a party of any size from 2 people up.
 
-### Files for the repo root
+---
 
-| File | Purpose |
-|---|---|
-| `index.html` | The whole game (HTML, CSS, JS) |
-| `schema.sql` | Database tables, realtime, and access policies |
-| `favicon.ico`, `favicon-16x16.png`, `favicon-32x32.png` | Browser tab icons |
-| `apple-touch-icon.png`, `android-chrome-*.png`, `site.webmanifest` | Home-screen icons |
+### On your phone
+Open the link in Safari (iPhone/iPad) or Chrome (Android), then choose **Share → Add to Home Screen**. It gets its own icon and opens full-screen, just like an app from the store.
 
-## Game settings
+### More apps by Josh Riley
+[The Riley Rag](https://joshp523.github.io/RileyRag/) · [Word Games](https://joshp523.github.io/Word-Games/) · [Russian Verbs](https://joshp523.github.io/russian/) · [Riley Rangers](https://joshp523.github.io/Rangers-app/) · [Habits: Josh](https://joshp523.github.io/daily-discipline/) · [Habits: Meishe](https://joshp523.github.io/Habit-tracker-app-Meishe/) · [Habits: Grandma](https://joshp523.github.io/wendys-app/) · [Writing](https://joshp523.github.io/writing-app/)
 
-Click **Game settings** at the bottom of the lobby to change:
-
-- Answer, vote, results and scoreboard timers (0 = no timer)
-- Number of rounds and matchups per round
-- Points per vote, sweep bonus, and max answer length
-- Duel mode (two players per prompt) or free-for-all (everyone answers)
-- Auto-advance and auto-start timers, and prompt shuffling
-- Safety quips (the fallback answers for players who run out of time)
-- **Background music:** the built-in carnival tune, or your own MP3, M4A, WAV or OGG file (max 25 MB). Your track is stored only in the host's browser and loops automatically. Music starts on the host's first click.
-
-## Notes
-
-- **Security:** there are no accounts. The tables allow anyone with your public key to read and write, which is fine for a game among friends but not for anything private.
-- **Cleanup:** rooms never expire. Use **End room** in the game, or run this now and then:
-  ```sql
-  delete from qp_rooms where created_at < now() - interval '7 days';
-  ```
-- **Players:** the minimum is 2 and there's no maximum. Matchups per round scale with the number of players (one per player by default).
-- **Troubleshooting:** if "Create room" fails, check the key and URL, and make sure `schema.sql` ran without errors in the same project your keys point to. If photos fail with a "check constraint" or "too long" error, re-run `schema.sql`, which removes old photo size limits. If they fail with a "schema cache" error, run `notify pgrst, 'reload schema';` in the SQL Editor and try again.
+<sub>Built by Josh Riley. Setup notes for whoever maintains it are in [SETUP.md](SETUP.md).</sub>
